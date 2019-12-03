@@ -7,6 +7,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <thread>
+#include <cmath>
 
 
 OpenALDevice::OpenALDevice() : mSamplesCaptured(0) {
@@ -103,14 +104,14 @@ void OpenALDevice::saveWAV(const std::string& fileName) {
     // Set number of samples per channel
     buffer[0].resize(mSamplesCaptured);
     // Fill the buffer with samples
-    for (int i = 0; i < mSamplesCaptured; i++)
-        buffer[0][i] = mCaptureBuffer[i];
+    for (int i = 1; i < mSamplesCaptured * 2; i*=2)
+        buffer[0][i] = mCaptureBuffer[i - 1] * std::pow(2, 8) + mCaptureBuffer[i];
 
     auto ok = audioFile.setAudioBuffer(buffer);
     if (!ok)
         throw std::runtime_error("unable to set audio buffer");
 
-    ok = audioFile.save("../saved/" + fileName + ".wav", AudioFileFormat::Wave);
+    ok = audioFile.save(fileName + ".wav", AudioFileFormat::Wave);
     if (!ok)
         throw std::runtime_error("unable to save audio buffer in file");
 }

@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <time.h>
-#include <zconf.h>
 
 #include <OpenALDevice.h>
 #include <iostream>
+#include <unistd.h>
 
 
 int main() {
@@ -32,7 +32,7 @@ int main() {
 
         helper.record(5);
         printf("Done!\n");
-        helper.saveWAV("hello");
+        helper.saveWAV("../saved/2");
         printf("Starting playback...\n");
         helper.play();
     } catch (const std::exception& e) {
