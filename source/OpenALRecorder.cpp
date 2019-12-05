@@ -2,10 +2,10 @@
 
 #include <AL/al.h>
 #include <AL/alext.h>
-#include <AudioFile.h>
 
 #include <chrono>
 #include <cstring>
+#include <fstream>
 #include <stdexcept>
 #include <thread>
 #include <cmath>
@@ -37,7 +37,6 @@ void al_nssleep(unsigned long nsec)
 
 
 OpenALRecorder::OpenALRecorder(const std::string& deviceName) :
-        mFile(nullptr),
         mDataSizeOffset(0),
         mDataSize(0),
         mChannels(1),
@@ -67,22 +66,6 @@ OpenALRecorder::OpenALRecorder(const std::string& deviceName) :
     mDevice = alcCaptureOpenDevice(deviceName.empty() ? nullptr : deviceName.c_str(), mSampleRate, format, 32768);
     if (!mDevice)
         throw std::runtime_error("unable to open device");
-
-    /*mMainDevice = alcOpenDevice(nullptr);
-    if (mMainDevice == nullptr)
-        throw std::runtime_error("unable to open main device");
-
-    auto context = alcCreateContext(mMainDevice, nullptr);
-    if (context == nullptr)
-        throw std::runtime_error("unable to create context");
-
-    // Make the playback context current
-    alcMakeContextCurrent(context);
-    alcProcessContext(context);
-
-    mCaptureDevice = alcCaptureOpenDevice(nullptr, 8000, AL_FORMAT_MONO16, 800);
-    if (mCaptureDevice == nullptr)
-        throw std::runtime_error("unable to open capture device");*/
 }
 
 OpenALRecorder::~OpenALRecorder() {
@@ -95,7 +78,11 @@ std::string OpenALRecorder::getCaptureDeviceName() {
 }
 
 void OpenALRecorder::recordInFile(float seconds, const std::string& fileName) {
-    openAndWriteWAVHeader(fileName);
+    std::ifstream file(fileName, std::ios::binary);
+    if (!file)
+        throw std::runtime_error("unable to open a file");
+
+    openAndWriteWAVHeader(file);
 
     auto err = ALC_NO_ERROR;
     alcCaptureStart(mDevice);
@@ -156,6 +143,8 @@ void OpenALRecorder::recordInFile(float seconds, const std::string& fileName) {
     mBuffer = nullptr;
     mBufferSize = 0;
 
+
+
     auto total_size = ftell(mFile);
     if (fseek(mFile, mDataSizeOffset, SEEK_SET) == 0) {
         fwrite32le(mDataSize * mFrameSize, mFile);
@@ -167,29 +156,10 @@ void OpenALRecorder::recordInFile(float seconds, const std::string& fileName) {
     mFile = nullptr;
 }
 
-void OpenALRecorder::play() {
-    /*ALuint buffer;
-    ALuint source;
+void OpenALRecorder::openAndWriteWAVHeader(std::ifstream& file) {
 
-    // Generate an OpenAL buffer for the captured data
-    alGenBuffers(1, &buffer);
-    alGenSources(1, &source);
-    alBufferData(buffer, AL_FORMAT_MONO16, mCaptureBuffer, mSamplesCaptured * 2, 8000);
-    alSourcei(source, AL_BUFFER, buffer);
-    alSourcePlay(source);
 
-    // Wait for the source to stop playing
-    auto playState = AL_PLAYING;
-    while (playState == AL_PLAYING) {
-        alGetSourcei(source, AL_SOURCE_STATE, &playState);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
 
-    alDeleteSources(1, &source);
-    alDeleteBuffers(1, &buffer);*/
-}
-
-void OpenALRecorder::openAndWriteWAVHeader(const std::string& fileName) {
     mFile = fopen(fileName.c_str(), "wb");
     if (!mFile)
         throw std::runtime_error("unable to open a file");

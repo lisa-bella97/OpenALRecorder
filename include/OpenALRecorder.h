@@ -18,26 +18,18 @@ public:
     std::string getCaptureDeviceName();
 
     /**
-     * Records audio to the capture device for seconds time
+     * Records audio from the capture device for seconds time and saves it to WAV file
      */
     void recordInFile(float seconds, const std::string& fileName);
 
-    /**
-     * Plays captured audio from the capture device
-     */
-    void play();
-
-    /**
-     * Saves captured audio to the wav file
-     */
-
-
 private:
-    void openAndWriteWAVHeader(const std::string& fileName);
+    void openAndWriteWAVHeader(std::ifstream& file);
 
     ALCdevice* mDevice;
 
-    FILE* mFile;
+    //std::ifstream mFile;
+
+    //FILE* mFile;
     long mDataSizeOffset;
     ALuint mDataSize;
 
