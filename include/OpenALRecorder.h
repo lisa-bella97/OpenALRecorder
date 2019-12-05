@@ -1,9 +1,11 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <AL/alc.h>
 #include <AL/al.h>
+
+#include <fstream>
+#include <string>
+#include <vector>
 
 
 class OpenALRecorder {
@@ -23,11 +25,9 @@ public:
     void recordInFile(float seconds, const std::string& fileName);
 
 private:
-    void openAndWriteWAVHeader(std::ifstream& file);
+    void openAndWriteWAVHeader(std::ofstream& file);
 
     ALCdevice* mDevice;
-
-    //std::ifstream mFile;
 
     //FILE* mFile;
     long mDataSizeOffset;

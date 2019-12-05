@@ -5,7 +5,6 @@
 
 #include <chrono>
 #include <cstring>
-#include <fstream>
 #include <stdexcept>
 #include <thread>
 #include <cmath>
@@ -13,17 +12,17 @@
 #include <stdlib.h>
 
 
-static void fwrite16le(ALushort val, FILE *f)
-{
+static void fwrite16le(ALushort val, std::ofstream& f) {
     ALubyte data[2] = { (ALubyte)(val&0xff), (ALubyte)((val>>8)&0xff) };
-    fwrite(data, 1, 2, f);
+    for (const auto& i : data)
+        f << i;
 }
 
-static void fwrite32le(ALuint val, FILE *f)
-{
+static void fwrite32le(ALuint val, std::ofstream& f) {
     ALubyte data[4] = { (ALubyte)(val&0xff), (ALubyte)((val>>8)&0xff), (ALubyte)((val>>16)&0xff),
                         (ALubyte)((val>>24)&0xff) };
-    fwrite(data, 1, 4, f);
+    for (const auto& i : data)
+        f << i;
 }
 
 void al_nssleep(unsigned long nsec)
@@ -78,7 +77,7 @@ std::string OpenALRecorder::getCaptureDeviceName() {
 }
 
 void OpenALRecorder::recordInFile(float seconds, const std::string& fileName) {
-    std::ifstream file(fileName, std::ios::binary);
+    std::ofstream file(fileName, std::ios::binary);
     if (!file)
         throw std::runtime_error("unable to open a file");
 
@@ -156,43 +155,36 @@ void OpenALRecorder::recordInFile(float seconds, const std::string& fileName) {
     mFile = nullptr;
 }
 
-void OpenALRecorder::openAndWriteWAVHeader(std::ifstream& file) {
+void OpenALRecorder::openAndWriteWAVHeader(std::ofstream& file) {
+    file << "RIFF";
+    fwrite32le(0xFFFFFFFF, file); // 'RIFF' header len; filled in at close
 
+    file << "WAVE";
 
-
-    mFile = fopen(fileName.c_str(), "wb");
-    if (!mFile)
-        throw std::runtime_error("unable to open a file");
-
-    fputs("RIFF", mFile);
-    fwrite32le(0xFFFFFFFF, mFile); // 'RIFF' header len; filled in at close
-
-    fputs("WAVE", mFile);
-
-    fputs("fmt ", mFile);
-    fwrite32le(18, mFile); // 'fmt ' header len
+    file << "fmt";
+    fwrite32le(18, file); // 'fmt ' header len
 
     // 16-bit val, format type id (1 = integer PCM, 3 = float PCM)
-    fwrite16le(mBits == 32 ? 0x0003 : 0x0001, mFile);
+    fwrite16le(mBits == 32 ? 0x0003 : 0x0001, file);
     // 16-bit val, channel count
-    fwrite16le((ALushort)mChannels, mFile);
+    fwrite16le((ALushort)mChannels, file);
     // 32-bit val, frequency
-    fwrite32le(mSampleRate, mFile);
+    fwrite32le(mSampleRate, file);
     // 32-bit val, bytes per second
-    fwrite32le(mSampleRate * mFrameSize, mFile);
+    fwrite32le(mSampleRate * mFrameSize, file);
     // 16-bit val, frame size
-    fwrite16le((ALushort)mFrameSize, mFile);
+    fwrite16le((ALushort)mFrameSize, file);
     // 16-bit val, bits per sample
-    fwrite16le((ALushort)mBits, mFile);
+    fwrite16le((ALushort)mBits, file);
     // 16-bit val, extra byte count
-    fwrite16le(0, mFile);
+    fwrite16le(0, file);
 
-    fputs("data", mFile);
-    fwrite32le(0xFFFFFFFF, mFile); // 'data' header len; filled in at close
+    file << "data";
+    fwrite32le(0xFFFFFFFF, file); // 'data' header len; filled in at close
 
-    mDataSizeOffset = ftell(mFile) - 4;
-    if (ferror(mFile) || mDataSizeOffset < 0) {
-        fclose(mFile);
+    mDataSizeOffset = file.tellp() - 4;
+    if (file.fail() || mDataSizeOffset < 0) {
+        file.close();
         throw std::runtime_error("unable to write header");
     }
 }
