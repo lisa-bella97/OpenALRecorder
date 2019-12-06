@@ -8,8 +8,8 @@
 #include <stdexcept>
 #include <thread>
 #include <cmath>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 
 static void fwrite16le(ALushort val, std::ofstream& f) {
@@ -25,12 +25,11 @@ static void fwrite32le(ALuint val, std::ofstream& f) {
         f << i;
 }
 
-void al_nssleep(unsigned long nsec)
-{
-    struct timespec ts{}, rem{};
-    ts.tv_sec = (time_t)(nsec / 1000000000ul);
-    ts.tv_nsec = (long)(nsec % 1000000000ul);
-    while(nanosleep(&ts, &rem) == -1 && errno == EINTR)
+void al_nssleep(unsigned long nsec) {
+    timespec ts{}, rem{};
+    ts.tv_sec = static_cast<time_t>(nsec / 1000000000ul);
+    ts.tv_nsec = static_cast<long>(nsec % 1000000000ul);
+    while (nanosleep(&ts, &rem) == -1 && errno == EINTR)
         ts = rem;
 }
 
@@ -68,7 +67,6 @@ OpenALRecorder::OpenALRecorder(const std::string& deviceName) :
 }
 
 OpenALRecorder::~OpenALRecorder() {
-    //alcMakeContextCurrent(nullptr);
     alcCaptureCloseDevice(mDevice);
 }
 
@@ -86,15 +84,17 @@ void OpenALRecorder::recordInFile(float seconds, const std::string& fileName) {
     auto err = ALC_NO_ERROR;
     alcCaptureStart(mDevice);
 
-    while ((double)mDataSize / (double)mSampleRate < seconds &&
-           (err = alcGetError(mDevice)) == ALC_NO_ERROR && !ferror(mFile)) {
+    while (static_cast<double>(mDataSize) / static_cast<double>(mSampleRate) < seconds &&
+           (err = alcGetError(mDevice)) == ALC_NO_ERROR && !file.fail()) {
         ALCint count = 0;
         alcGetIntegerv(mDevice, ALC_CAPTURE_SAMPLES, 1, &count);
         if (count < 1) {
             al_nssleep(10000000);
+            //std::this_thread::sleep_for(std::chrono::nanoseconds(10000000));
             continue;
         }
         if (count > mBufferSize) {
+            //auto data = new ALbyte[mFrameSize];
             auto data = (ALbyte*)calloc(mFrameSize, (ALuint)count);
             free(mBuffer);
             mBuffer = data;
@@ -102,35 +102,10 @@ void OpenALRecorder::recordInFile(float seconds, const std::string& fileName) {
         }
         alcCaptureSamples(mDevice, mBuffer, count);
 
-#if defined(__BYTE_ORDER) && __BYTE_ORDER == __BIG_ENDIAN
-        /* Byteswap multibyte samples on big-endian systems (wav needs little-
-         * endian, and OpenAL gives the system's native-endian).
-         */
-        if(recorder.mBits == 16)
-        {
-            ALCint i;
-            for(i = 0;i < count*recorder.mChannels;i++)
-            {
-                ALbyte b = recorder.mBuffer[i*2 + 0];
-                recorder.mBuffer[i*2 + 0] = recorder.mBuffer[i*2 + 1];
-                recorder.mBuffer[i*2 + 1] = b;
-            }
-        }
-        else if(recorder.mBits == 32)
-        {
-            ALCint i;
-            for(i = 0;i < count*recorder.mChannels;i++)
-            {
-                ALbyte b0 = recorder.mBuffer[i*4 + 0];
-                ALbyte b1 = recorder.mBuffer[i*4 + 1];
-                recorder.mBuffer[i*4 + 0] = recorder.mBuffer[i*4 + 3];
-                recorder.mBuffer[i*4 + 1] = recorder.mBuffer[i*4 + 2];
-                recorder.mBuffer[i*4 + 2] = b1;
-                recorder.mBuffer[i*4 + 3] = b0;
-            }
-        }
-#endif
-        mDataSize += (ALuint)fwrite(mBuffer, mFrameSize, (ALuint)count, mFile);
+        for (auto i = 0; i < mBufferSize * mFrameSize; i++)
+            file << mBuffer[i];
+        mDataSize += mBufferSize * mFrameSize;
+        //mDataSize += (ALuint)fwrite(mBuffer, mFrameSize, (ALuint)count, mFile);
     }
 
     alcCaptureStop(mDevice);
@@ -142,17 +117,14 @@ void OpenALRecorder::recordInFile(float seconds, const std::string& fileName) {
     mBuffer = nullptr;
     mBufferSize = 0;
 
-
-
-    auto total_size = ftell(mFile);
-    if (fseek(mFile, mDataSizeOffset, SEEK_SET) == 0) {
-        fwrite32le(mDataSize * mFrameSize, mFile);
-        if(fseek(mFile, 4, SEEK_SET) == 0)
-            fwrite32le((ALuint)total_size - 8, mFile);
+    auto total_size = file.tellp();
+    if (file.seekp(mDataSizeOffset, std::ios_base::beg)) {
+        fwrite32le(mDataSize * mFrameSize, file);
+        if(file.seekp(4, std::ios_base::beg))
+            fwrite32le((ALuint)total_size - 8, file);
     }
 
-    fclose(mFile);
-    mFile = nullptr;
+    file.close();
 }
 
 void OpenALRecorder::openAndWriteWAVHeader(std::ofstream& file) {
@@ -182,7 +154,7 @@ void OpenALRecorder::openAndWriteWAVHeader(std::ofstream& file) {
     file << "data";
     fwrite32le(0xFFFFFFFF, file); // 'data' header len; filled in at close
 
-    mDataSizeOffset = file.tellp() - 4;
+    mDataSizeOffset = file.tellp() - 4L;
     if (file.fail() || mDataSizeOffset < 0) {
         file.close();
         throw std::runtime_error("unable to write header");

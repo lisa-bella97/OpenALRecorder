@@ -5,7 +5,7 @@ int main() {
     try {
         OpenALRecorder recorder;
         std::cout << "Opened device: " << recorder.getCaptureDeviceName() << std::endl;
-        recorder.recordInFile(4, "../saved/5.wav");
+        recorder.recordInFile(4, "../saved/1.wav");
     } catch (const std::exception& e) {
         std::cout << "An exception occurred: " << e.what() << std::endl;
         return -1;
