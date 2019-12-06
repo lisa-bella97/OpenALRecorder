@@ -3,14 +3,13 @@
 #include <AL/alc.h>
 #include <AL/al.h>
 
-#include <fstream>
 #include <string>
 #include <vector>
 
 
 class OpenALRecorder {
 public:
-    OpenALRecorder(const std::string& deviceName = "");
+    explicit OpenALRecorder(const std::string& deviceName = "");
 
     ~OpenALRecorder();
 
@@ -25,18 +24,16 @@ public:
     void recordInFile(float seconds, const std::string& fileName);
 
 private:
-    void openAndWriteWAVHeader(std::ofstream& file);
+    static void fwrite16le(ALushort val, FILE* f);
+    static void fwrite32le(ALuint val, FILE* f);
+    static void al_nssleep(unsigned long nsec);
+
+    void openAndWriteWAVHeader(FILE* file);
 
     ALCdevice* mDevice;
-
-    //FILE* mFile;
     long mDataSizeOffset;
-    ALuint mDataSize;
-
     ALuint mChannels;
     ALuint mBits;
     ALuint mSampleRate;
     ALuint mFrameSize;
-    ALbyte* mBuffer;
-    ALsizei mBufferSize;
 };
