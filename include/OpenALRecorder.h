@@ -9,7 +9,7 @@
 
 class OpenALRecorder {
 public:
-    explicit OpenALRecorder(const std::string& deviceName = "");
+    explicit OpenALRecorder(const std::string& deviceName = "", int channels = 1, int bits = 16, int sampleRate = 44100);
 
     ~OpenALRecorder();
 

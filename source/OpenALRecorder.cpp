@@ -5,11 +5,11 @@
 #include <stdexcept>
 
 
-OpenALRecorder::OpenALRecorder(const std::string& deviceName) :
+OpenALRecorder::OpenALRecorder(const std::string& deviceName, int channels, int bits, int sampleRate) :
         mDataSizeOffset(0),
-        mChannels(1),
-        mBits(16),
-        mSampleRate(44100) {
+        mChannels(channels),
+        mBits(bits),
+        mSampleRate(sampleRate) {
     mFrameSize = mChannels * mBits / 8;
 
     auto format = AL_NONE;
