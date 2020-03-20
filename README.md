@@ -30,7 +30,7 @@ $ ./openALRecorder [--device <device name>]
                    [--file <file name (*.wav)>]
 ```
 
-Команда ниже запустит программу с опциями по умолчанию (`--device <default_device> --channels 1 --bits 16 --rate 9600 --time 5 --file "../saved/default.wav"`):
+Команда ниже запустит программу с опциями по умолчанию (`--device <default_device> --channels 1 --bits 16 --rate 9600 --time 5 --file "default.wav"`):
 
 ```console
 $ ./openALRecorder
