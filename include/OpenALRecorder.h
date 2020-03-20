@@ -9,7 +9,8 @@
 
 class OpenALRecorder {
 public:
-    explicit OpenALRecorder(const std::string& deviceName = "", int channels = 1, int bits = 16, int sampleRate = 44100);
+    explicit OpenALRecorder(const std::string &deviceName = "", int channels = 1, int bits = 16,
+                            int sampleRate = 9600);
 
     ~OpenALRecorder();
 
@@ -21,16 +22,18 @@ public:
     /**
      * Records audio from the capture device for seconds time and saves it to WAV file
      */
-    void recordInFile(float seconds, const std::string& fileName);
+    void recordInFile(float seconds, const std::string &fileName);
 
 private:
-    static void fwrite16le(ALushort val, FILE* f);
-    static void fwrite32le(ALuint val, FILE* f);
+    static void fwrite16le(ALushort val, FILE *f);
+
+    static void fwrite32le(ALuint val, FILE *f);
+
     static void al_nssleep(unsigned long nsec);
 
-    void openAndWriteWAVHeader(FILE* file);
+    void openAndWriteWAVHeader(FILE *file);
 
-    ALCdevice* mDevice;
+    ALCdevice *mDevice;
     long mDataSizeOffset;
     ALuint mChannels;
     ALuint mBits;

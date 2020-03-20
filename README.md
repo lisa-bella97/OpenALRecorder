@@ -4,7 +4,7 @@
 
 ## Pre-build
 
-Необходимо установить библиотеку OpenAl. Например, в ОС Ubuntu это делается следующей командой:
+Необходимо установить библиотеку OpenAL. Например, в ОС Ubuntu это делается следующей командой:
 
 ```console
 $ sudo apt-get install libopenal-dev
@@ -22,7 +22,7 @@ $ cmake && make
 ## Run
 
 ```
-$ ./openAlRecorder [--device <device name>]
+$ ./openALRecorder [--device <device name>]
                    [--channels <1|2>]
                    [--bits <8|16|32>]
                    [--rate <record rate in Hz>]
@@ -30,8 +30,8 @@ $ ./openAlRecorder [--device <device name>]
                    [--file <file name (*.wav)>]
 ```
 
-Команда ниже запустит программу с опциями по умолчанию (`--device <default_device> --channels 1 --bits 16 --rate 44100 --time 5 --file "../saved/default.wav"`):
+Команда ниже запустит программу с опциями по умолчанию (`--device <default_device> --channels 1 --bits 16 --rate 9600 --time 5 --file "../saved/default.wav"`):
 
 ```console
-$ ./openAlRecorder
+$ ./openALRecorder
 ```

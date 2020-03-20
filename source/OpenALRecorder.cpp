@@ -5,7 +5,7 @@
 #include <stdexcept>
 
 
-OpenALRecorder::OpenALRecorder(const std::string& deviceName, int channels, int bits, int sampleRate) :
+OpenALRecorder::OpenALRecorder(const std::string &deviceName, int channels, int bits, int sampleRate) :
         mDataSizeOffset(0),
         mChannels(channels),
         mBits(bits),
@@ -42,16 +42,16 @@ std::string OpenALRecorder::getCaptureDeviceName() {
     return alcGetString(mDevice, ALC_CAPTURE_DEVICE_SPECIFIER);
 }
 
-void OpenALRecorder::recordInFile(float seconds, const std::string& fileName) {
+void OpenALRecorder::recordInFile(float seconds, const std::string &fileName) {
     auto file = fopen(fileName.c_str(), "wb");
     if (!file)
         throw std::runtime_error("unable to open a file");
-    
+
     openAndWriteWAVHeader(file);
 
     auto err = ALC_NO_ERROR;
     auto dataSize = 0;
-    ALbyte* buffer = nullptr;
+    ALbyte *buffer = nullptr;
     ALsizei bufferSize = 0;
 
     alcCaptureStart(mDevice);
@@ -67,7 +67,7 @@ void OpenALRecorder::recordInFile(float seconds, const std::string& fileName) {
         }
 
         if (count > bufferSize) {
-            auto data = static_cast<ALbyte*>(calloc(mFrameSize, static_cast<ALuint>(count)));
+            auto data = static_cast<ALbyte *>(calloc(mFrameSize, static_cast<ALuint>(count)));
             free(buffer);
             buffer = data;
             bufferSize = count;
@@ -87,21 +87,21 @@ void OpenALRecorder::recordInFile(float seconds, const std::string& fileName) {
     auto total_size = ftell(file);
     if (fseek(file, mDataSizeOffset, SEEK_SET) == 0) {
         fwrite32le(dataSize * mFrameSize, file);
-        if(fseek(file, 4, SEEK_SET) == 0)
+        if (fseek(file, 4, SEEK_SET) == 0)
             fwrite32le(static_cast<ALuint>(total_size) - 8, file);
     }
 
     fclose(file);
 }
 
-void OpenALRecorder::fwrite16le(ALushort val, FILE* f) {
-    ALubyte data[2] = {static_cast<ALubyte>(val&0xff), static_cast<ALubyte>((val>>8)&0xff) };
+void OpenALRecorder::fwrite16le(ALushort val, FILE *f) {
+    ALubyte data[2] = {static_cast<ALubyte>(val & 0xff), static_cast<ALubyte>((val >> 8) & 0xff)};
     fwrite(data, 1, 2, f);
 }
 
-void OpenALRecorder::fwrite32le(ALuint val, FILE* f) {
-    ALubyte data[4] = { static_cast<ALubyte>(val&0xff), static_cast<ALubyte>((val>>8)&0xff),
-                        static_cast<ALubyte>((val>>16)&0xff), static_cast<ALubyte>((val>>24)&0xff) };
+void OpenALRecorder::fwrite32le(ALuint val, FILE *f) {
+    ALubyte data[4] = {static_cast<ALubyte>(val & 0xff), static_cast<ALubyte>((val >> 8) & 0xff),
+                       static_cast<ALubyte>((val >> 16) & 0xff), static_cast<ALubyte>((val >> 24) & 0xff)};
     fwrite(data, 1, 4, f);
 }
 
@@ -113,7 +113,7 @@ void OpenALRecorder::al_nssleep(unsigned long nsec) {
         ts = rem;
 }
 
-void OpenALRecorder::openAndWriteWAVHeader(FILE* file) {
+void OpenALRecorder::openAndWriteWAVHeader(FILE *file) {
     fputs("RIFF", file);
     fwrite32le(0xFFFFFFFF, file); // 'RIFF' header len; filled in at close
 
