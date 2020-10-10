@@ -16,7 +16,7 @@ $ sudo apt-get install libopenal-dev
 $ git clone https://github.com/lisa-bella97/OpenALRecorder
 $ cd OpenALRecorder
 $ mkdir build && cd build
-$ cmake && make
+$ cmake .. && make
 ```
 
 ## Run
