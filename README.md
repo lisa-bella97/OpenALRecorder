@@ -10,6 +10,12 @@
 $ sudo apt-get install libopenal-dev
 ```
 
+Возможно, также потребуется zlib:
+
+```console
+$ sudo apt-get install zlib1g-dev
+```
+
 ## Build
 
 ```console
